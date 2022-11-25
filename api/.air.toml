@@ -1,0 +1,39 @@
+root = "."
+tmp_dir = "tmp"
+
+[build]
+# Just plain old shell command. You could use `make` as well.
+cmd = "go build -o ./tmp/main ."
+# Binary file yields from `cmd`.
+bin = "tmp/main"
+
+
+full_bin = "APP_ENV=dev APP_USER=air ./tmp/main 80"
+
+log = "air.log"
+stop_on_error = true
+send_interrupt = false
+delay = 1000  # (ms)
+kill_delay = 500  # (ms)
+
+include_ext = ["go", "tpl", "tmpl", "html"]
+include_dir = []
+
+exclude_file = []
+exclude_regex = ["_test.go"]
+exclude_dir = ["assets", "tmp", "vendor"]
+exclude_unchanged = true
+
+follow_symlink = true
+
+[log]
+time a= false
+
+[color]
+main = "magenta"
+watcher = "cyan"
+build = "blue"
+runner = "green"
+
+[misc]
+clean_on_exit = true

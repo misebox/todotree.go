@@ -1,0 +1,33 @@
+version: '3'
+
+tasks:
+  build:
+    desc: Build docker image to deploy
+    cmds:
+      - docker compose build --no-cache
+    silent: true
+  test:
+    desc: Run Test
+    deps:
+      - build
+    dir: api
+    cmds:
+      - go test -race -shuffle=on
+  up:
+    desc: up with hot relaod
+    cmds:
+      - docker compose up -d
+      - task: logs
+    silent: true
+  down:
+    desc: down
+    cmds:
+      - docker compose down
+  logs:
+    desc: logs
+    cmds:
+      - docker compose logs --tail=100 -f
+  ps:
+    desc: ps 
+    cmds:
+      - docker compose ps
