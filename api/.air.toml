@@ -27,7 +27,7 @@ exclude_unchanged = true
 follow_symlink = true
 
 [log]
-time a= false
+time = false
 
 [color]
 main = "magenta"

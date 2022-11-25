@@ -20,6 +20,7 @@ COPY --from=builder /app/app .
 
 # ローカル用
 FROM golang:1.19.3 as dev
+ENV XDG_CACHE_HOME /tmp/.cache
 WORKDIR /app
 RUN go install github.com/cosmtrek/air@latest
 CMD ["air"]

@@ -4,14 +4,26 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"net"
 	"net/http"
 	"os"
+	"todotree/config"
 
 	"golang.org/x/sync/errgroup"
 )
 
 func run(ctx context.Context) error {
-	s := &http.Server{
+	cfg, err := config.New()
+	if err != nil {
+		return err
+	}
+	listener, err := net.Listen("tcp", fmt.Sprintf(":%d", cfg.Port))
+	if err != nil {
+		log.Fatalf("failed to listen port %d: %v", cfg.Port, err)
+	}
+	url := fmt.Sprintf("http://%s", listener.Addr().String())
+	log.Printf("start with: %v", url)
+	server := &http.Server{
 		Addr: ":8000",
 		Handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			fmt.Fprintf(w, "Path: %s", r.URL.Path)
@@ -20,7 +32,7 @@ func run(ctx context.Context) error {
 	eg, ctx := errgroup.WithContext(ctx)
 	eg.Go(func() error {
 		// ErrServerClosed(正常終了)以外のエラーが発生したらClose失敗
-		if err := s.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+		if err := server.Serve(listener); err != nil && err != http.ErrServerClosed {
 			log.Printf("failed to close: %+v", err)
 			return err
 		}
@@ -28,7 +40,7 @@ func run(ctx context.Context) error {
 	})
 	// シグナル受信時にサーバーを終了
 	<-ctx.Done()
-	if err := s.Shutdown(context.Background()); err != nil {
+	if err := server.Shutdown(context.Background()); err != nil {
 		log.Printf("failed to shutdown: %+v", err)
 	}
 	log.Printf("nothing to do")
