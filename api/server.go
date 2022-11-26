@@ -13,16 +13,16 @@ import (
 )
 
 type Server struct {
-	server   *http.Server
-	listener net.Listener
+	srv *http.Server
+	lsn net.Listener
 }
 
 func NewServer(lsn net.Listener, mux http.Handler) *Server {
 	return &Server{
-		server: &http.Server{
+		srv: &http.Server{
 			Handler: mux,
 		},
-		listener: lsn,
+		lsn: lsn,
 	}
 }
 func (s *Server) Run(ctx context.Context) error {
@@ -32,7 +32,7 @@ func (s *Server) Run(ctx context.Context) error {
 	eg, ctx := errgroup.WithContext(ctx)
 	eg.Go(func() error {
 		// ErrServerClosed(正常終了)以外のエラーが発生したらClose失敗
-		if err := s.server.Serve(s.listener); err != nil && err != http.ErrServerClosed {
+		if err := s.srv.Serve(s.lsn); err != nil && err != http.ErrServerClosed {
 			log.Printf("failed to close: %+v", err)
 			return err
 		}
@@ -40,7 +40,7 @@ func (s *Server) Run(ctx context.Context) error {
 	})
 	// シグナル受信時にサーバーを終了
 	<-ctx.Done()
-	if err := s.server.Shutdown(context.Background()); err != nil {
+	if err := s.srv.Shutdown(context.Background()); err != nil {
 		log.Printf("failed to shutdown: %+v", err)
 	}
 	return eg.Wait()
