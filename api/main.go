@@ -50,7 +50,6 @@ func run(ctx context.Context) error {
 	if err := server.Shutdown(context.Background()); err != nil {
 		log.Printf("failed to shutdown: %+v", err)
 	}
-	log.Printf("nothing to do")
 	return eg.Wait()
 }
 

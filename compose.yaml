@@ -8,6 +8,7 @@ services:
     volumes:
       - ./api:/app
     environment:
+      TODO_ENV: dev
       PORT: 8001
     ports:
       - "8001:8001"
