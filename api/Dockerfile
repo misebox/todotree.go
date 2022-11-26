@@ -17,6 +17,7 @@ RUN apt-get update
 
 COPY --from=builder /app/app .
 
+CMD ["./app"]
 
 # ローカル用
 FROM golang:1.19.3 as dev

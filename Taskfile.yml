@@ -1,8 +1,16 @@
 version: '3'
+env:
+  DOCKER_TAG: latest
 
 tasks:
   build:
     desc: Build docker image to deploy
+    cmds:
+      - docker build -t ${DOCKER_IMAGE_NAME}:${DOCKER_TAG} --target deploy api/
+    silent: true
+
+  build-local:
+    desc: Build docker image to development
     cmds:
       - docker compose build --no-cache
     silent: true
@@ -10,7 +18,7 @@ tasks:
   test:
     desc: Run Test
     deps:
-      - build
+      - build-local
     dir: api
     cmds:
       - go test -race -shuffle=on -v ./...

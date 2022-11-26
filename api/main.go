@@ -7,13 +7,19 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"os/signal"
+	"syscall"
+	"time"
 	"todotree/config"
 
 	"golang.org/x/sync/errgroup"
 )
 
 func run(ctx context.Context) error {
-	cfg, err := config.New()
+	ctx, stop := signal.NotifyContext(ctx, os.Interrupt, syscall.SIGTERM)
+	defer stop()
+
+	cfg, err := config.NewConfig()
 	if err != nil {
 		return err
 	}
@@ -26,6 +32,7 @@ func run(ctx context.Context) error {
 	server := &http.Server{
 		Addr: ":8000",
 		Handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			time.Sleep(5 * time.Second)
 			fmt.Fprintf(w, "Path: %s", r.URL.Path)
 		}),
 	}
