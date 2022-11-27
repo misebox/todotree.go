@@ -3,6 +3,13 @@ env:
   DOCKER_TAG: latest
 
 tasks:
+  default:
+    deps:
+      - test
+      - up
+    cmds:
+      - task: logs
+
   build:
     desc: Build docker image to deploy
     cmds:
@@ -23,6 +30,8 @@ tasks:
 
   up:
     desc: up with hot relaod
+    deps:
+      - build-local
     cmds:
       - docker compose up -d
     silent: true
