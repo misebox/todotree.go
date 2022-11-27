@@ -33,5 +33,4 @@ func main() {
 		fmt.Printf("failed to terminate server: %v", err)
 		os.Exit(1)
 	}
-	unused_superlongnamedvariable := 100
 }
