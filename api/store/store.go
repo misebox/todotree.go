@@ -2,6 +2,7 @@ package store
 
 import (
 	"errors"
+	"log"
 	"todotree/entity"
 )
 
@@ -23,8 +24,9 @@ func (ts *TaskStore) Add(t *entity.Task) (entity.TaskID, error) {
 }
 
 func (ts *TaskStore) All() entity.Tasks {
-	tasks := make([]*entity.Task, len(ts.Tasks))
-	for _, t := range ts.Tasks {
+	tasks := make(entity.Tasks, 0, len(ts.Tasks))
+	for i, t := range ts.Tasks {
+		log.Printf("i: %d, t: %v", i, t)
 		tasks = append(tasks, t)
 	}
 	return tasks
