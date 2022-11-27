@@ -17,8 +17,6 @@ tasks:
 
   test:
     desc: Run Test
-    deps:
-      - build-local
     dir: api
     cmds:
       - go test -race -shuffle=on -v ./...

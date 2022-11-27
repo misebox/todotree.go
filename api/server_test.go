@@ -25,7 +25,6 @@ func TestServer_Run(t *testing.T) {
 		s := NewServer(l, mux)
 		return s.Run(ctx)
 	})
-	t.Logf("debug: %v", l.Addr().String())
 	addr := l.Addr().String()
 	in := "message"
 	rsp, err := http.Get(fmt.Sprintf("http://%s/%s", addr, in))

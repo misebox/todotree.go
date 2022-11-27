@@ -5,6 +5,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"runtime/debug"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -34,6 +35,7 @@ func AssertResponse(t *testing.T, got *http.Response, status int, body []byte) {
 	}
 	if got.StatusCode != status {
 		t.Fatalf("want status %d, but got %d, body: %q", status, got.StatusCode, gb)
+		t.Log(string(debug.Stack()))
 	}
 	if len(gb) == 0 && len(body) == 0 {
 		return
