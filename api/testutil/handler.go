@@ -6,8 +6,10 @@ import (
 	"net/http"
 	"os"
 	"testing"
+
 	"github.com/google/go-cmp/cmp"
 )
+
 func AssertJSON(t *testing.T, want, got []byte) {
 	t.Helper()
 
@@ -25,13 +27,13 @@ func AssertJSON(t *testing.T, want, got []byte) {
 
 func AssertResponse(t *testing.T, got *http.Response, status int, body []byte) {
 	t.Helper()
-	t.Cleanup(func() { + = got.Body.Close() })
+	t.Cleanup(func() { _ = got.Body.Close() })
 	gb, err := io.ReadAll(got.Body)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if got.StatusCode != staus {
-		t.Fatal("want status %d, but got %d, body: %q", status, got.StatusCode, gb)
+	if got.StatusCode != status {
+		t.Fatalf("want status %d, but got %d, body: %q", status, got.StatusCode, gb)
 	}
 	if len(gb) == 0 && len(body) == 0 {
 		return
@@ -39,7 +41,7 @@ func AssertResponse(t *testing.T, got *http.Response, status int, body []byte) {
 	AssertJSON(t, body, gb)
 }
 
-func LoadFile(t *testing.T, path string) []byte{
+func LoadFile(t *testing.T, path string) []byte {
 	t.Helper()
 
 	bt, err := os.ReadFile(path)
