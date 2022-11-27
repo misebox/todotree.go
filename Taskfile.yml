@@ -26,7 +26,7 @@ tasks:
     desc: Run Test
     dir: api
     cmds:
-      - go test -race -shuffle=on -v ./...
+      - go test -race -shuffle=on -v ./... --coverprofile=coverage.out
 
   up:
     desc: up with hot relaod
@@ -52,10 +52,15 @@ tasks:
       - docker compose ps
 
   migrate:
-    desc: Migrate local DB
-    deps:
-      - up
+    desc: Execute migration for local DB
     cmds:
       - |
         mysqldef -u todo -p todo -h 127.0.0.1 -P 33306 todo \
+        < ./api/_tools/mysql/schema.sql
+
+  dry-migrate:
+    desc: Execute DB migration as a dry run for local DB
+    cmds:
+      - |
+        mysqldef -u todo -p todo -h 127.0.0.1 -P 33306 todo --dry-run \
         < ./api/_tools/mysql/schema.sql
