@@ -10,7 +10,7 @@ services:
     environment:
       TODO_ENV: dev
       PORT: 8001
-      TODO_DB_HOST: todo-db
+      TODO_DB_HOST: db
       TODO_DB_PORT: 3306
       TODO_DB_USER: todo
       TODO_DB_PASSWORD: todo

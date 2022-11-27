@@ -1,7 +1,10 @@
 package main
 
 import (
+	"context"
 	"net/http"
+	"todotree/clock"
+	"todotree/config"
 	"todotree/handler"
 	"todotree/store"
 
@@ -9,17 +12,21 @@ import (
 	"github.com/go-playground/validator/v10"
 )
 
-func NewMux() http.Handler {
+func NewMux(ctx context.Context, cfg *config.Config) (http.Handler, func(), error) {
 	mux := chi.NewRouter()
-	// mux := http.NewServeMux()
 	mux.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		_, _ = w.Write([]byte(`{"status": "ok"}`))
 	})
 	v := validator.New()
-	at := &handler.AddTask{Store: store.Tasks, Validator: v}
-	mux.Post("/tasks", at.ServeHTTP)
-	lt := &handler.ListTask{Store: store.Tasks}
-	mux.Get("/tasks", lt.ServeHTTP)
-	return mux
+	db, cleanup, err := store.New(ctx, cfg)
+	if err != nil {
+		return nil, cleanup, err
+	}
+	repo := store.Repository{Clocker: clock.RealClocker{}}
+	add_task := &handler.AddTask{DB: db, Repo: &repo, Validator: v}
+	mux.Post("/tasks", add_task.ServeHTTP)
+	list_task := &handler.ListTask{DB: db, Repo: &repo}
+	mux.Get("/tasks", list_task.ServeHTTP)
+	return mux, cleanup, nil
 }

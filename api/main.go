@@ -14,14 +14,18 @@ func run(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	listener, err := net.Listen("tcp", fmt.Sprintf(":%d", cfg.Port))
+	lsn, err := net.Listen("tcp", fmt.Sprintf("0.0.0.0:%d", cfg.Port))
 	if err != nil {
 		log.Fatalf("failed to listen port %d: %v", cfg.Port, err)
 	}
-	url := fmt.Sprintf("http://%s", listener.Addr().String())
+	url := fmt.Sprintf("http://%s", lsn.Addr().String())
 	log.Printf("start with: %v", url)
-	mux := NewMux()
-	server := NewServer(listener, mux)
+	mux, cleanup, err := NewMux(ctx, cfg)
+	if err != nil {
+		return err
+	}
+	defer cleanup()
+	server := NewServer(lsn, mux)
 
 	return server.Run(ctx)
 }

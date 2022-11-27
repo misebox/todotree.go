@@ -1,16 +1,27 @@
 package main
 
 import (
+	"context"
 	"io"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"todotree/config"
 )
 
 func TestNewMux(t *testing.T) {
 	w := httptest.NewRecorder()
 	r := httptest.NewRequest(http.MethodGet, "/health", nil)
-	sut_mux := NewMux()
+	ctx := context.Background()
+	cfg, err := config.NewConfig()
+	if err != nil {
+		t.Fatalf("failed to create config: %v", err)
+	}
+	sut_mux, cleanup, err := NewMux(ctx, cfg)
+	if err != nil {
+		t.Errorf("failed to create mux: %v", err)
+	}
+	t.Cleanup(cleanup)
 	sut_mux.ServeHTTP(w, r)
 	resp := w.Result()
 	t.Cleanup(func() { _ = resp.Body.Close() })

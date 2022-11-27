@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
-	"todotree/entity"
+	"todotree/clock"
 	"todotree/store"
 	"todotree/testutil"
 
@@ -38,6 +38,8 @@ func TestAddTask(t *testing.T) {
 			},
 		},
 	}
+	db := testutil.OpenDBForTest(t)
+	repo := &store.Repository{Clocker: clock.RealClocker{}}
 	for name, tt := range tests {
 		tt := tt
 		t.Run(name, func(t *testing.T) {
@@ -48,10 +50,10 @@ func TestAddTask(t *testing.T) {
 				"/tasks",
 				bytes.NewReader(testutil.LoadFile(t, tt.reqFile)),
 			)
+
 			sut := AddTask{
-				Store: &store.TaskStore{
-					Tasks: map[entity.TaskID]*entity.Task{},
-				},
+				DB:        db,
+				Repo:      repo,
 				Validator: validator.New(),
 			}
 			sut.ServeHTTP(w, r)

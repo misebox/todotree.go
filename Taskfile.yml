@@ -24,16 +24,19 @@ tasks:
 
   test:
     desc: Run Test
-    dir: api
+    dir: api/
+    env:
+      TODO_DB_PORT: 33306
     cmds:
-      - go test -race -shuffle=on -v ./... --coverprofile=coverage.out
+      - echo $TODO_DB_PORT
+      - go test -race -shuffle=on ./... --coverprofile=coverage.out {{ .CLI_ARGS }}
 
   up:
     desc: up with hot relaod
     deps:
       - build-local
     cmds:
-      - docker compose up -d
+      - docker compose up -d {{ .CLI_ARGS }}
     silent: true
 
   down:
@@ -44,8 +47,12 @@ tasks:
   logs:
     desc: logs
     cmds:
-      - docker compose logs --tail=100 -f
+      - docker compose logs --tail=100 -f {{ .CLI_ARGS }}
 
+  mod:
+    dir: api/
+    cmds:
+      - go mod tidy
   ps:
     desc: ps 
     cmds:
