@@ -1,5 +1,8 @@
 # todotree
 
+[![test](https://github.com/misebox/todotree.go/actions/workflows/test.yml/badge.svg)](https://github.com/misebox/todotree.go/actions/workflows/test.yml)
+
+[![golang-ci](https://github.com/misebox/todotree.go/actions/workflows/golangci.yml/badge.svg)](https://github.com/misebox/todotree.go/actions/workflows/golangci.yml)
 
 ## タスクランナーについて
 
