@@ -44,21 +44,11 @@ task: Available tasks for this project:
 ```
 $ task
 task: [test] go test -race -shuffle=on -v ./...
-[+] Building 0.2s (2/3)                            
-
 ...
-
--test.shuffle 1669537445191338423
-=== RUN   TestNewMux
---- PASS: TestNewMux (0.00s)
-
-...
-
 [+] Running 2/2                                    
  ⠿ Container todotreego-api-1  Started        0.6s 
  ⠿ Container todo-db           Running        0.0s
 ...
-
 todotreego-api-1  | running...
 todotreego-api-1  | 2022/11/27 08:24:11 start with: http://[::]:8001
 
