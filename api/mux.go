@@ -34,5 +34,10 @@ func NewMux(ctx context.Context, cfg *config.Config) (http.Handler, func(), erro
 	// - list tasks
 	list_task := &handler.ListTask{Service: &service.ListTask{DB: db, Repo: &repo}}
 	mux.Get("/tasks", list_task.ServeHTTP)
+	ru := &handler.RegisterUser{
+		Service:   &service.RegisterUser{DB: db, Repo: &repo},
+		Validator: v,
+	}
+	mux.Post("/users", ru.ServeHTTP)
 	return mux, cleanup, nil
 }

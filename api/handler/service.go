@@ -13,3 +13,8 @@ type ListTasksService interface {
 type AddTaskService interface {
 	AddTask(ctx context.Context, title string) (*entity.Task, error)
 }
+
+type RegisterUserService interface {
+	RegisterUser(ctx context.Context, name, email, password, role string,
+	) (*entity.User, error)
+}
