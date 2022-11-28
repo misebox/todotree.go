@@ -6,6 +6,7 @@ import (
 	"todotree/clock"
 	"todotree/config"
 	"todotree/handler"
+	"todotree/service"
 	"todotree/store"
 
 	"github.com/go-chi/chi/v5"
@@ -24,9 +25,9 @@ func NewMux(ctx context.Context, cfg *config.Config) (http.Handler, func(), erro
 		return nil, cleanup, err
 	}
 	repo := store.Repository{Clocker: clock.RealClocker{}}
-	add_task := &handler.AddTask{DB: db, Repo: &repo, Validator: v}
+	add_task := &handler.AddTask{Service: &service.AddTask{DB: db, Repo: &repo}, Validator: v}
 	mux.Post("/tasks", add_task.ServeHTTP)
-	list_task := &handler.ListTask{DB: db, Repo: &repo}
+	list_task := &handler.ListTask{Service: &service.ListTask{DB: db, Repo: &repo}}
 	mux.Get("/tasks", list_task.ServeHTTP)
 	return mux, cleanup, nil
 }

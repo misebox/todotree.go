@@ -8,8 +8,41 @@ import (
 	"todotree/entity"
 	"todotree/testutil"
 
+	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/google/go-cmp/cmp"
+	"github.com/jmoiron/sqlx"
 )
+
+func TestRepository_AddTask(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+
+	c := clock.FixedClocker{}
+	var wantID int64 = 20
+	okTask := &entity.Task{
+		Title:    "ok task",
+		Status:   "todo",
+		Created:  c.Now(),
+		Modified: c.Now(),
+	}
+
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { db.Close() })
+	mock.ExpectExec(
+		// エスケープが必要
+		`INSERT INTO task \(title, status, created, modified\) VALUES \(\?, \?, \?, \?\);`,
+	).WithArgs(okTask.Title, okTask.Status, c.Now(), c.Now()).
+		WillReturnResult(sqlmock.NewResult(wantID, 1))
+
+	xdb := sqlx.NewDb(db, "mysql")
+	r := &Repository{Clocker: c}
+	if err := r.AddTask(ctx, xdb, okTask); err != nil {
+		t.Errorf("want no error, but got %v", err)
+	}
+}
 
 func TestRepository_ListTasks(t *testing.T) {
 	ctx := context.Background()

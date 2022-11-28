@@ -2,11 +2,12 @@ package handler
 
 import (
 	"bytes"
+	"context"
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"testing"
-	"todotree/clock"
-	"todotree/store"
+	"todotree/entity"
 	"todotree/testutil"
 
 	"github.com/go-playground/validator/v10"
@@ -38,8 +39,7 @@ func TestAddTask(t *testing.T) {
 			},
 		},
 	}
-	db := testutil.OpenDBForTest(t)
-	repo := &store.Repository{Clocker: clock.RealClocker{}}
+
 	for name, tt := range tests {
 		tt := tt
 		t.Run(name, func(t *testing.T) {
@@ -51,12 +51,22 @@ func TestAddTask(t *testing.T) {
 				bytes.NewReader(testutil.LoadFile(t, tt.reqFile)),
 			)
 
+			moq := &AddTaskServiceMock{}
+			moq.AddTaskFunc = func(
+				ctx context.Context, title string,
+			) (*entity.Task, error) {
+				if tt.want.status == http.StatusOK {
+					return &entity.Task{ID: 1}, nil
+				}
+				return nil, errors.New("error from mock")
+			}
+
 			sut := AddTask{
-				DB:        db,
-				Repo:      repo,
+				Service:   moq,
 				Validator: validator.New(),
 			}
 			sut.ServeHTTP(w, r)
+
 			resp := w.Result()
 			testutil.AssertResponse(t, resp, tt.want.status, testutil.LoadFile(t, tt.want.rspFile))
 		})
