@@ -6,7 +6,7 @@ import (
 	"todotree/store"
 )
 
-//go:generate go run github.com/matryer/moq -out moq_test.go . TaskAdder TaskListener
+//go:generate go run github.com/matryer/moq -out moq_test.go . TaskAdder TaskLister UserRegister
 type TaskAdder interface {
 	AddTask(ctx context.Context, db store.Execer, t *entity.Task) error
 }
