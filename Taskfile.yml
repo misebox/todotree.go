@@ -24,19 +24,26 @@ tasks:
 
   test:
     desc: Run Test
+    deps:
+      - { "task": up, "vars": {"CLI_ARGS": "db redis"}}
+        # vars:
+        #   CLI_ARGS: db redis
     dir: api/
     env:
+      PORT: 3333
+      TODO_DB_HOST: 127.0.0.1
       TODO_DB_PORT: 33306
+      TODO_DB_NAME: todo_test
+      TODO_DB_USER: todo_test
+      TODO_DB_PASSWORD: todo_test
     cmds:
       - echo $TODO_DB_PORT
       - go test -race -shuffle=on ./... --coverprofile=coverage.out {{ .CLI_ARGS }}
 
   up:
     desc: up with hot relaod
-    deps:
-      - build-local
     cmds:
-      - docker compose up -d {{ .CLI_ARGS }}
+      - docker compose up --build -d {{ .CLI_ARGS }}
     silent: true
 
   down:
@@ -64,12 +71,18 @@ tasks:
       - |
         mysqldef -u todo -p todo -h 127.0.0.1 -P 33306 todo \
         < ./api/_tools/mysql/schema.sql
+      - |
+        mysqldef -u todo_test -p todo_test -h 127.0.0.1 -P 33306 todo_test \
+        < ./api/_tools/mysql/schema.sql
 
   dry-migrate:
     desc: Execute DB migration as a dry run for local DB
     cmds:
       - |
         mysqldef -u todo -p todo -h 127.0.0.1 -P 33306 todo --dry-run \
+        < ./api/_tools/mysql/schema.sql
+      - |
+        mysqldef -u todo_test -p todo_test -h 127.0.0.1 -P 33306 todo_test --dry-run \
         < ./api/_tools/mysql/schema.sql
 
   generate:
