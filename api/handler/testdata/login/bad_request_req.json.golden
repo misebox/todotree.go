@@ -1,0 +1,5 @@
+{
+    "user_name": "testuser",
+    "email": "testuser@example.com",
+    "wrong_field": "Passw0rd!"
+}
