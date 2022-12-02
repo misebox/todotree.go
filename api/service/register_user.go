@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"todotree/entity"
 	"todotree/store"
+
+	"golang.org/x/crypto/bcrypt"
 )
 
 type RegisterUser struct {
@@ -14,14 +16,18 @@ type RegisterUser struct {
 
 func (r *RegisterUser) RegisterUser(ctx context.Context, name, email, password, role string,
 ) (*entity.User, error) {
+	pw, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	if err != nil {
+		return nil, fmt.Errorf("failed to hash password: %w", err)
+	}
 	u := &entity.User{
 		Name:     name,
 		Email:    email,
-		Password: password,
+		Password: string(pw),
 		Role:     role,
 	}
-	err := r.Repo.RegisterUser(ctx, r.DB, u)
-	if err != nil {
+
+	if err := r.Repo.RegisterUser(ctx, r.DB, u); err != nil {
 		return nil, fmt.Errorf("failed to register: %w", err)
 	}
 	return u, nil

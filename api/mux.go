@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"net/http"
+	"todotree/auth"
 	"todotree/clock"
 	"todotree/config"
 	"todotree/handler"
@@ -25,19 +26,38 @@ func NewMux(ctx context.Context, cfg *config.Config) (http.Handler, func(), erro
 	if err != nil {
 		return nil, cleanup, err
 	}
-	repo := store.Repository{Clocker: clock.RealClocker{}}
-
-	// handle /tasks
-	// - add task
-	add_task := &handler.AddTask{Service: &service.AddTask{DB: db, Repo: &repo}, Validator: v}
-	mux.Post("/tasks", add_task.ServeHTTP)
-	// - list tasks
-	list_task := &handler.ListTask{Service: &service.ListTask{DB: db, Repo: &repo}}
-	mux.Get("/tasks", list_task.ServeHTTP)
+	clocker := clock.RealClocker{}
+	repo := store.Repository{Clocker: clocker}
+	redis_cli, err := store.NewKVS(ctx, cfg)
+	if err != nil {
+		return nil, cleanup, err
+	}
+	jwter, err := auth.NewJWTer(redis_cli, clocker)
+	if err != nil {
+		return nil, cleanup, err
+	}
+	// handle
 	ru := &handler.RegisterUser{
 		Service:   &service.RegisterUser{DB: db, Repo: &repo},
 		Validator: v,
 	}
-	mux.Post("/users", ru.ServeHTTP)
+	mux.Post("/register", ru.ServeHTTP)
+
+	login := &handler.Login{
+		Service: &service.Login{
+			DB:             db,
+			Repo:           &repo,
+			TokenGenerator: jwter,
+		},
+		Validator: v,
+	}
+	mux.Post("/login", login.ServeHTTP)
+
+	add_task := &handler.AddTask{Service: &service.AddTask{DB: db, Repo: &repo}, Validator: v}
+	mux.Post("/tasks", add_task.ServeHTTP)
+
+	list_task := &handler.ListTask{Service: &service.ListTask{DB: db, Repo: &repo}}
+	mux.Get("/tasks", list_task.ServeHTTP)
+
 	return mux, cleanup, nil
 }

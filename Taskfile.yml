@@ -36,6 +36,8 @@ tasks:
       TODO_DB_NAME: todo_test
       TODO_DB_USER: todo_test
       TODO_DB_PASSWORD: todo_test
+      TODO_REDIS_HOST: 127.0.0.1
+      TODO_REDIS_PORT: 36379
     cmds:
       - go test -race -shuffle=on ./... --coverprofile=coverage.out {{ .CLI_ARGS }}
 
