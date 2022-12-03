@@ -2,19 +2,30 @@ package store
 
 import (
 	"context"
+	"fmt"
+	"todotree/auth"
 	"todotree/entity"
 )
 
 func (r *Repository) ListTasks(
 	ctx context.Context, db Queryer,
 ) (entity.Tasks, error) {
+	user_id, ok := auth.GetUserID(ctx)
+	if !ok {
+		return nil, fmt.Errorf("user_id not found")
+	}
 	tasks := entity.Tasks{}
 	sql := `
 		SELECT
 			id, title, status,
 			created, modified
-		FROM task;`
-	if err := db.SelectContext(ctx, &tasks, sql); err != nil {
+		FROM task
+		WHERE user_id = ?;`
+	err := db.SelectContext(
+		ctx, &tasks, sql,
+		user_id,
+	)
+	if err != nil {
 		return nil, err
 	}
 	return tasks, nil
@@ -23,14 +34,18 @@ func (r *Repository) ListTasks(
 func (r *Repository) AddTask(
 	ctx context.Context, db Execer, t *entity.Task,
 ) error {
+	user_id, ok := auth.GetUserID(ctx)
+	if !ok {
+		return fmt.Errorf("user_id not found")
+	}
 	t.Created = r.Clocker.Now()
 	t.Modified = r.Clocker.Now()
 	sql := `INSERT INTO task
-	(title, status, created, modified)
-	VALUES (?, ?, ?, ?);`
+	(user_id, title, status, created, modified)
+	VALUES (?, ?, ?, ?, ?);`
 	result, err := db.ExecContext(
 		ctx, sql,
-		t.Title, t.Status, t.Created, t.Modified,
+		user_id, t.Title, t.Status, t.Created, t.Modified,
 	)
 	if err != nil {
 		return err

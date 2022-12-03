@@ -13,9 +13,13 @@ CREATE TABLE IF NOT EXISTS `user` (
 
 CREATE TABLE IF NOT EXISTS `task` (
     `id`       BIGINT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT 'タスクの識別子',
+    `user_id`  BIGINT UNSIGNED NOT NULL COMMENT 'タスクを作成したユーザーの識別子',
     `title`    VARCHAR(200) NOT NULL COMMENT 'タスクのタイトル',
     `status`   VARCHAR(20) NOT NULL COMMENT 'タスクの状態',
     `created`  DATETIME NOT NULL COMMENT 'レコード作成日時',
     `modified` DATETIME NOT NULL COMMENT 'レコード修正日時',
-    PRIMARY KEY (`id`)
+    PRIMARY KEY (`id`),
+    CONSTRAINT `fk_user_id`
+        FOREIGN KEY (`user_id`) REFERENCES `user` (`id`)
+            ON DELETE RESTRICT ON UPDATE RESTRICT
 ) Engine = InnoDB DEFAULT CHARSET = utf8mb4 COMMENT = 'タスク';
