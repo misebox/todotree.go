@@ -20,7 +20,7 @@ type UserRegister interface {
 }
 
 type UserGetter interface {
-	GetUserByName(ctx context.Context, db store.Queryer, name string) (*entity.User, error)
+	GetUserByEmail(ctx context.Context, db store.Queryer, name string) (*entity.User, error)
 }
 
 type TokenGenerator interface {

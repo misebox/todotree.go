@@ -15,7 +15,6 @@ type Login struct {
 func (l *Login) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	var body struct {
-		UserName string `json:"user_name" validate:"required"`
 		Email    string `json:"email" validate:"required"`
 		Password string `json:"password" validate:"required"`
 	}
@@ -32,7 +31,7 @@ func (l *Login) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}, http.StatusBadRequest)
 		return
 	}
-	jwt, err := l.Service.Login(ctx, body.UserName, body.Password)
+	jwt, err := l.Service.Login(ctx, body.Email, body.Password)
 	if err != nil {
 		RespondJSON(ctx, w, &ErrResponse{
 			Message: err.Error(),

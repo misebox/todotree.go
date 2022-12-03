@@ -9,7 +9,6 @@ CREATE TABLE IF NOT EXISTS `user` (
     PRIMARY KEY (`id`),
     UNIQUE KEY `uix_email` (`email`) USING BTREE,
     UNIQUE KEY `uix_name` (`name`) USING BTREE
-
 ) Engine = InnoDB DEFAULT CHARSET = utf8mb4 COMMENT = 'ユーザー';
 
 CREATE TABLE IF NOT EXISTS `task` (
