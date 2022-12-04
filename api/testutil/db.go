@@ -17,12 +17,10 @@ func OpenDBForTest(t *testing.T) *sqlx.DB {
 	if _, defined := os.LookupEnv("CI"); defined {
 		port = 3306
 	}
-	t.Logf("todo:todo@(127.0.0.1:%d)/todo?parseTime=true", port)
+	connStr := fmt.Sprintf("todo_test:todo_test@(127.0.0.1:%d)/todo_test?parseTime=true", port)
+	t.Log(connStr)
 
-	db, err := sql.Open(
-		"mysql",
-		fmt.Sprintf("todo:todo@(127.0.0.1:%d)/todo?parseTime=true", port),
-	)
+	db, err := sql.Open("mysql", connStr)
 	if err != nil {
 		t.Fatal(err)
 	}
