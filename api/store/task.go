@@ -2,28 +2,21 @@ package store
 
 import (
 	"context"
-	"fmt"
-	"todotree/auth"
 	"todotree/entity"
 )
 
 func (r *Repository) ListTasks(
-	ctx context.Context, db Queryer,
+	ctx context.Context, db Queryer, userID entity.UserID,
 ) (entity.Tasks, error) {
-	user_id, ok := auth.GetUserID(ctx)
-	if !ok {
-		return nil, fmt.Errorf("user_id not found")
-	}
 	tasks := entity.Tasks{}
 	sql := `
 		SELECT
-			id, title, status,
+			id, user_id, title, status,
 			created, modified
 		FROM task
 		WHERE user_id = ?;`
 	err := db.SelectContext(
-		ctx, &tasks, sql,
-		user_id,
+		ctx, &tasks, sql, userID,
 	)
 	if err != nil {
 		return nil, err
@@ -34,10 +27,6 @@ func (r *Repository) ListTasks(
 func (r *Repository) AddTask(
 	ctx context.Context, db Execer, t *entity.Task,
 ) error {
-	user_id, ok := auth.GetUserID(ctx)
-	if !ok {
-		return fmt.Errorf("user_id not found")
-	}
 	t.Created = r.Clocker.Now()
 	t.Modified = r.Clocker.Now()
 	sql := `INSERT INTO task
@@ -45,7 +34,7 @@ func (r *Repository) AddTask(
 	VALUES (?, ?, ?, ?, ?);`
 	result, err := db.ExecContext(
 		ctx, sql,
-		user_id, t.Title, t.Status, t.Created, t.Modified,
+		t.UserID, t.Title, t.Status, t.Created, t.Modified,
 	)
 	if err != nil {
 		return err

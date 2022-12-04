@@ -1,14 +1,17 @@
 package fixture
 
 import (
-	"math/rand"
 	"strconv"
 	"time"
 	"todotree/entity"
 )
 
+var cnt int = 10000
+
 func NewUserForTest() *entity.User {
-	test_digit := rand.Int()
+	cnt += 1
+	test_digit := cnt
+	// test_digit := rand.Int()
 	test_prefix := strconv.Itoa(test_digit)[:5]
 	result := &entity.User{
 		ID:       entity.UserID(test_digit),

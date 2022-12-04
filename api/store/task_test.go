@@ -7,11 +7,82 @@ import (
 	"todotree/clock"
 	"todotree/entity"
 	"todotree/testutil"
+	"todotree/testutil/fixture"
 
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/google/go-cmp/cmp"
 	"github.com/jmoiron/sqlx"
 )
+
+func prepareUser(ctx context.Context, t *testing.T, db Execer) entity.UserID {
+	t.Helper()
+	u := fixture.NewUserForTest()
+	result, err := db.ExecContext(
+		ctx,
+		`INSERT INTO user (name, email, password, role, created, modified)
+		VALUES (?, ?, ?, ?, ?, ?);`,
+		u.Name, u.Email, u.Password, u.Role, u.Created, u.Modified,
+	)
+	if err != nil {
+		t.Fatalf("insert user: %v", err)
+	}
+	id, err := result.LastInsertId()
+	if err != nil {
+		t.Fatalf("got user_id: %v", err)
+	}
+	return entity.UserID(id)
+}
+
+func prepareTasks(ctx context.Context, t *testing.T, con Execer) (entity.UserID, entity.Tasks) {
+	t.Helper()
+
+	userID := prepareUser(ctx, t, con)
+	otherUserID := prepareUser(ctx, t, con)
+	c := clock.FixedClocker{}
+	wants := entity.Tasks{
+		{
+			UserID: userID,
+			Title:  "want task 1", Status: "todo",
+			Created: c.Now(), Modified: c.Now(),
+		},
+		{
+			UserID: userID,
+			Title:  "want task 2", Status: "done",
+			Created: c.Now(), Modified: c.Now(),
+		},
+	}
+	tasks := entity.Tasks{
+		wants[0],
+		{
+			UserID: otherUserID,
+			Title:  "not want task", Status: "todo",
+			Created: c.Now(), Modified: c.Now(),
+		},
+		wants[1],
+	}
+	result, err := con.ExecContext(ctx,
+		`INSERT INTO task (title, user_id, status, created, modified)
+		VALUES
+		(?, ?, ?, ?, ?),
+		(?, ?, ?, ?, ?),
+		(?, ?, ?, ?, ?);`,
+		tasks[0].Title, tasks[0].UserID, tasks[0].Status, tasks[0].Created, tasks[0].Modified,
+		tasks[1].Title, tasks[1].UserID, tasks[1].Status, tasks[1].Created, tasks[1].Modified,
+		tasks[2].Title, tasks[2].UserID, tasks[2].Status, tasks[2].Created, tasks[2].Modified,
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+	lastInsertID, err := result.LastInsertId()
+	if err != nil {
+		t.Fatal(err)
+	}
+	// MySQLでは発行したIDのうち最小のIDがlastInsertIDとなる
+	tasks[0].ID = entity.TaskID(lastInsertID)
+	tasks[1].ID = entity.TaskID(lastInsertID + 1)
+	tasks[2].ID = entity.TaskID(lastInsertID + 2)
+	return userID, wants
+}
 
 func TestRepository_AddTask(t *testing.T) {
 	t.Parallel()
@@ -20,6 +91,7 @@ func TestRepository_AddTask(t *testing.T) {
 	c := clock.FixedClocker{}
 	var wantID int64 = 20
 	okTask := &entity.Task{
+		UserID:   999,
 		Title:    "ok task",
 		Status:   "todo",
 		Created:  c.Now(),
@@ -33,8 +105,9 @@ func TestRepository_AddTask(t *testing.T) {
 	t.Cleanup(func() { db.Close() })
 	mock.ExpectExec(
 		// エスケープが必要
-		`INSERT INTO task \(title, status, created, modified\) VALUES \(\?, \?, \?, \?\);`,
-	).WithArgs(okTask.Title, okTask.Status, c.Now(), c.Now()).
+		`INSERT INTO task \(user_id, title, status, created, modified\)
+		VALUES \(\?, \?, \?, \?, \?\);`,
+	).WithArgs(okTask.UserID, okTask.Title, okTask.Status, c.Now(), c.Now()).
 		WillReturnResult(sqlmock.NewResult(wantID, 1))
 
 	xdb := sqlx.NewDb(db, "mysql")
@@ -52,59 +125,14 @@ func TestRepository_ListTasks(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	wants := prepareTasks(ctx, t, tx)
+	userID, wants := prepareTasks(ctx, t, tx)
 
 	sut := &Repository{}
-	gots, err := sut.ListTasks(ctx, tx)
+	gots, err := sut.ListTasks(ctx, tx, userID)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
 	if d := cmp.Diff(gots, wants); len(d) != 0 {
 		t.Errorf("differs: (got +want)\n%s", d)
 	}
-}
-
-func prepareTasks(ctx context.Context, t *testing.T, con Execer) entity.Tasks {
-	t.Helper()
-
-	if _, err := con.ExecContext(ctx, "DELETE FROM task;"); err != nil {
-		t.Logf("failed to initialize task: %v", err)
-	}
-	c := clock.FixedClocker{}
-	wants := entity.Tasks{
-		{
-			Title: "want task 1", Status: "todo",
-			Created: c.Now(), Modified: c.Now(),
-		},
-		{
-			Title: "want task 2", Status: "todo",
-			Created: c.Now(), Modified: c.Now(),
-		},
-		{
-			Title: "want task 3", Status: "done",
-			Created: c.Now(), Modified: c.Now(),
-		},
-	}
-	result, err := con.ExecContext(ctx,
-		`INSERT INTO task (title, status, created, modified)
-		VALUES
-		(?, ?, ?, ?),
-		(?, ?, ?, ?),
-		(?, ?, ?, ?);`,
-		wants[0].Title, wants[0].Status, wants[0].Created, wants[0].Modified,
-		wants[1].Title, wants[1].Status, wants[1].Created, wants[1].Modified,
-		wants[2].Title, wants[2].Status, wants[2].Created, wants[2].Modified,
-	)
-	if err != nil {
-		t.Fatal(err)
-	}
-	lastInsertID, err := result.LastInsertId()
-	if err != nil {
-		t.Fatal(err)
-	}
-	// MySQLでは発行したIDのうち最小のIDがlastInsertIDとなる
-	wants[0].ID = entity.TaskID(lastInsertID)
-	wants[1].ID = entity.TaskID(lastInsertID + 1)
-	wants[2].ID = entity.TaskID(lastInsertID + 2)
-	return wants
 }
