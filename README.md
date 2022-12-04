@@ -4,6 +4,14 @@
 
 [![golang-ci](https://github.com/misebox/todotree.go/actions/workflows/golangci.yml/badge.svg)](https://github.com/misebox/todotree.go/actions/workflows/golangci.yml)
 
+## このリポジトリについて
+
+書籍「詳解Go言語Webアプリケーション開発」のサンプルコードを読んで実装の練習をしているリポジトリです。
+サンプルコードと同じコードがほとんどです。
+
+- 詳解Go言語Webアプリケーション開発: https://www.c-r.com/book/detail/1462
+- 著者によるサンプルコードのリポジトリはこちら: https://github.com/budougumi0617/go_todo_app
+
 ## タスクランナーについて
 
 makeの代わりにtaskコマンドを使います。 
