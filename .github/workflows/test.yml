@@ -19,9 +19,9 @@ jobs:
           - 3306:3306
         env:
           MYSQL_ALLOW_EMPTY_PASSWORD: yes
-          MYSQL_DATABASE: todo
-          MYSQL_USER: todo
-          MYSQL_PASSWORD: todo
+          MYSQL_DATABASE: todo_test
+          MYSQL_USER: todo_test
+          MYSQL_PASSWORD: todo_test
       redis:
         image: redis
         options: >-
@@ -44,10 +44,20 @@ jobs:
       working-directory: ./api
       run: |
         go install github.com/k0kubun/sqldef/cmd/mysqldef@latest
-        mysqldef -u todo -p todo -h 127.0.0.1 -P 3306 todo < ./_tools/mysql/schema.sql
+        mysqldef -u todo_test -p todo_test -h 127.0.0.1 -P 3306 todo_test < ./_tools/mysql/schema.sql
 
     - name: test
       working-directory: ./api
+      env:
+        PORT: 3333
+        TODO_ENV: testing
+        TODO_DB_HOST: 127.0.0.1
+        TODO_DB_PORT: 3306
+        TODO_DB_NAME: todo_test
+        TODO_DB_USER: todo_test
+        TODO_DB_PASSWORD: todo_test
+        TODO_REDIS_HOST: 127.0.0.1
+        TODO_REDIS_PORT: 6379
       run: go test ./... -coverprofile=../coverage.out
 
     - name: report coverage
