@@ -17,6 +17,7 @@ coverage.out
 *.out
 
 tmp/
+access_token_for_debug
 
 # Dependency directories (remove the comment below to include it)
 # vendor/

@@ -1,0 +1,13 @@
+#!/bin/bash
+
+NAME="$1"
+if [ "$NAME" = "" ]
+then
+  echo "name required"
+  exit 1
+fi
+http -j localhost:8001/register \
+  name=${NAME} \
+  email="${NAME}@example.com" \
+  password=password \
+  role=admin

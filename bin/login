@@ -1,0 +1,14 @@
+#!/bin/bash
+
+NAME="$1"
+if [ "$NAME" = "" ]
+then
+  echo "name required"
+  exit 1
+fi
+http localhost:8001/login \
+  email=${NAME}@example.com \
+  password=password \
+  | jq -r .access_token \
+  > access_token_for_debug
+
