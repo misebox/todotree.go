@@ -1,2 +1,2 @@
 #!/bin/bash
-http localhost:8001/tasks Authorization:$(cat access_token_for_debug) $*
+http localhost:8001/tasks "Authorization: Bearer$(cat access_token_for_debug)" $*
