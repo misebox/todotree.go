@@ -11,7 +11,7 @@ type ListTasksService interface {
 }
 
 type AddTaskService interface {
-	AddTask(ctx context.Context, title string) (*entity.Task, error)
+	AddTask(ctx context.Context, title string, parentID *entity.TaskID) (*entity.Task, error)
 }
 
 type RegisterUserService interface {

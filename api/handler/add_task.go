@@ -17,7 +17,8 @@ type AddTask struct {
 func (at *AddTask) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	var b struct {
-		Title string `json:"title" validate:"required"`
+		Title    string         `json:"title" validate:"required"`
+		ParentID *entity.TaskID `json:"parent_id"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&b); err != nil {
 		RespondJSON(ctx, w, &ErrResponse{
@@ -32,7 +33,7 @@ func (at *AddTask) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}, http.StatusBadRequest)
 		return
 	}
-	t, err := at.Service.AddTask(ctx, b.Title)
+	t, err := at.Service.AddTask(ctx, b.Title, b.ParentID)
 	if err != nil {
 		RespondJSON(ctx, w, &ErrResponse{
 			Message: err.Error(),

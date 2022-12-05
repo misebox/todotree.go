@@ -92,6 +92,8 @@ func TestRepository_AddTask(t *testing.T) {
 	var wantID int64 = 20
 	okTask := &entity.Task{
 		UserID:   999,
+		RootID:   nil,
+		ParentID: nil,
 		Title:    "ok task",
 		Status:   "todo",
 		Created:  c.Now(),
@@ -105,9 +107,9 @@ func TestRepository_AddTask(t *testing.T) {
 	t.Cleanup(func() { db.Close() })
 	mock.ExpectExec(
 		// エスケープが必要
-		`INSERT INTO task \(user_id, title, status, created, modified\)
-		VALUES \(\?, \?, \?, \?, \?\);`,
-	).WithArgs(okTask.UserID, okTask.Title, okTask.Status, c.Now(), c.Now()).
+		`INSERT INTO task \(user_id, root_id, parent_id, title, status, created, modified\)
+		VALUES \(\?, \?, \?, \?, \?, \?, \?\);`,
+	).WithArgs(okTask.UserID, okTask.RootID, okTask.ParentID, okTask.Title, okTask.Status, c.Now(), c.Now()).
 		WillReturnResult(sqlmock.NewResult(wantID, 1))
 
 	xdb := sqlx.NewDb(db, "mysql")

@@ -30,11 +30,11 @@ func (r *Repository) AddTask(
 	t.Created = r.Clocker.Now()
 	t.Modified = r.Clocker.Now()
 	sql := `INSERT INTO task
-	(user_id, title, status, created, modified)
-	VALUES (?, ?, ?, ?, ?);`
+	(user_id, root_id, parent_id, title, status, created, modified)
+	VALUES (?, ?, ?, ?, ?, ?, ?);`
 	result, err := db.ExecContext(
 		ctx, sql,
-		t.UserID, t.Title, t.Status, t.Created, t.Modified,
+		t.UserID, t.RootID, t.ParentID, t.Title, t.Status, t.Created, t.Modified,
 	)
 	if err != nil {
 		return err
@@ -44,5 +44,19 @@ func (r *Repository) AddTask(
 		return err
 	}
 	t.ID = entity.TaskID(id)
+	if t.ParentID == nil {
+		t.RootID = &t.ID
+	} else {
+		// 親タスクのルートIDを継承する
+		sql := `SELECT root_id FROM task WHERE id = ?;`
+		err := db.GetContext(ctx, &t.RootID, sql, t.ParentID)
+		if err != nil {
+			return err
+		}
+	}
+
+	upd_sql := `UPDAWTE task set root_id = ? WHERE id = ?;`
+	db.ExecContext(ctx, upd_sql, t.RootID, t.ID)
+
 	return nil
 }

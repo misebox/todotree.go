@@ -14,6 +14,8 @@ const (
 type Task struct {
 	ID       TaskID     `json:"id" db:"id"`
 	UserID   UserID     `json:"user_id" db:"user_id"`
+	RootID   *TaskID    `json:"root_id" db:"root_id"`
+	ParentID *TaskID    `json:"parent_id" db:"parent_id"`
 	Title    string     `json:"title" db:"title"`
 	Status   TaskStatus `json:"status" db:"status"`
 	Created  time.Time  `json:"created" db:"created"`

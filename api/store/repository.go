@@ -52,13 +52,17 @@ type Preparer interface {
 	PreparexContext(ctx context.Context, query string) (*sqlx.Stmt, error)
 }
 
+type Queryer interface {
+	Preparer
+	QueryxContext(ctx context.Context, query string, args ...any) (*sqlx.Rows, error)
+	QueryRowxContext(ctx context.Context, query string, args ...any) *sqlx.Row
+	GetContext(ctx context.Context, dest interface{}, query string, args ...any) error
+	SelectContext(ctx context.Context, dest interface{}, query string, args ...any) error
+}
 type Execer interface {
 	ExecContext(ctx context.Context, query string, args ...any) (sql.Result, error)
 	NamedExecContext(ctx context.Context, query string, arg interface{}) (sql.Result, error)
-}
 
-type Queryer interface {
-	Preparer
 	QueryxContext(ctx context.Context, query string, args ...any) (*sqlx.Rows, error)
 	QueryRowxContext(ctx context.Context, query string, args ...any) *sqlx.Row
 	GetContext(ctx context.Context, dest interface{}, query string, args ...any) error

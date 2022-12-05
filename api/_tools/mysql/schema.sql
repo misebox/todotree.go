@@ -14,6 +14,8 @@ CREATE TABLE IF NOT EXISTS `user` (
 CREATE TABLE IF NOT EXISTS `task` (
     `id`       BIGINT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT 'タスクの識別子',
     `user_id`  BIGINT UNSIGNED NOT NULL COMMENT 'タスクを作成したユーザーの識別子',
+    `root_id`  BIGINT UNSIGNED NULL COMMENT 'ルートとなるタスクの識別子',
+    `parent_id`  BIGINT UNSIGNED NULL COMMENT '親タスクの識別子',
     `title`    VARCHAR(200) NOT NULL COMMENT 'タスクのタイトル',
     `status`   VARCHAR(20) NOT NULL COMMENT 'タスクの状態',
     `created`  DATETIME NOT NULL COMMENT 'レコード作成日時',
