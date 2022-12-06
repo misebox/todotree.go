@@ -8,6 +8,9 @@ then
 fi
 http localhost:8001/login \
   email=${NAME}@example.com \
+  password=password
+http localhost:8001/login \
+  email=${NAME}@example.com \
   password=password \
   | jq -r .access_token \
   > access_token_for_debug

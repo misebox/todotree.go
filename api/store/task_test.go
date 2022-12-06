@@ -89,12 +89,24 @@ func TestRepository_AddTask(t *testing.T) {
 	ctx := context.Background()
 
 	c := clock.FixedClocker{}
-	var wantID int64 = 20
-	okTask := &entity.Task{
+	// 親タスク(ルート)
+	pWantID := entity.TaskID(20)
+	pTask := &entity.Task{
 		UserID:   999,
 		RootID:   nil,
 		ParentID: nil,
-		Title:    "ok task",
+		Title:    "parent task",
+		Status:   "todo",
+		Created:  c.Now(),
+		Modified: c.Now(),
+	}
+	// サブタスク
+	cWantID := entity.TaskID(pWantID + 1)
+	cTask := &entity.Task{
+		UserID:   999,
+		RootID:   nil,
+		ParentID: &pWantID,
+		Title:    "child task",
 		Status:   "todo",
 		Created:  c.Now(),
 		Modified: c.Now(),
@@ -105,18 +117,51 @@ func TestRepository_AddTask(t *testing.T) {
 		t.Fatal(err)
 	}
 	t.Cleanup(func() { db.Close() })
+	// bhavior for parent task
 	mock.ExpectExec(
 		// エスケープが必要
 		`INSERT INTO task \(user_id, root_id, parent_id, title, status, created, modified\)
 		VALUES \(\?, \?, \?, \?, \?, \?, \?\);`,
-	).WithArgs(okTask.UserID, okTask.RootID, okTask.ParentID, okTask.Title, okTask.Status, c.Now(), c.Now()).
-		WillReturnResult(sqlmock.NewResult(wantID, 1))
+	).WithArgs(pTask.UserID, pTask.RootID, pTask.ParentID, pTask.Title, pTask.Status, c.Now(), c.Now()).
+		WillReturnResult(sqlmock.NewResult(int64(pWantID), 1))
+	mock.ExpectExec(
+		`UPDATE task set root_id = \? WHERE id = \?;`,
+	).WithArgs(pWantID, pWantID).
+		WillReturnResult(sqlmock.NewResult(int64(cWantID), 1))
+	// behavior for child task
+	mock.ExpectExec(
+		// エスケープが必要
+		`INSERT INTO task \(user_id, root_id, parent_id, title, status, created, modified\)
+		VALUES \(\?, \?, \?, \?, \?, \?, \?\);`,
+	).WithArgs(cTask.UserID, cTask.RootID, cTask.ParentID, cTask.Title, cTask.Status, c.Now(), c.Now()).
+		WillReturnResult(sqlmock.NewResult(int64(cWantID), 1))
+
+	mock.ExpectQuery(
+		`SELECT root_id FROM task WHERE id = \?;`,
+	).WithArgs(pWantID).
+		WillReturnRows(sqlmock.NewRows([]string{"root_id"}).AddRow(pWantID))
+
+	mock.ExpectExec(
+		`UPDATE task set root_id = \? WHERE id = \?;`,
+	).WithArgs(pWantID, cWantID).
+		WillReturnResult(sqlmock.NewResult(int64(cWantID), 1))
 
 	xdb := sqlx.NewDb(db, "mysql")
 	r := &Repository{Clocker: c}
-	if err := r.AddTask(ctx, xdb, okTask); err != nil {
+	if err := r.AddTask(ctx, xdb, pTask); err != nil {
 		t.Errorf("want no error, but got %v", err)
 	}
+
+	if err := r.AddTask(ctx, xdb, cTask); err != nil {
+		t.Errorf("want no error, but got %v", err)
+	}
+	if cTask.RootID == nil || *cTask.RootID != pWantID {
+		t.Fatalf("want %v, got %v", pWantID, cTask.RootID)
+	}
+	if cTask.ParentID == nil || *cTask.ParentID != pWantID {
+		t.Fatalf("want %v, got %v", pWantID, cTask.ParentID)
+	}
+
 }
 
 func TestRepository_ListTasks(t *testing.T) {

@@ -11,7 +11,8 @@ func (r *Repository) ListTasks(
 	tasks := entity.Tasks{}
 	sql := `
 		SELECT
-			id, user_id, title, status,
+			id, user_id, root_id, parent_id,
+			title, status,
 			created, modified
 		FROM task
 		WHERE user_id = ?;`
@@ -49,14 +50,19 @@ func (r *Repository) AddTask(
 	} else {
 		// 親タスクのルートIDを継承する
 		sql := `SELECT root_id FROM task WHERE id = ?;`
-		err := db.GetContext(ctx, &t.RootID, sql, t.ParentID)
+		var rootID entity.TaskID
+		err := db.GetContext(ctx, &rootID, sql, t.ParentID)
+		t.RootID = &rootID
 		if err != nil {
 			return err
 		}
 	}
 
-	upd_sql := `UPDAWTE task set root_id = ? WHERE id = ?;`
-	db.ExecContext(ctx, upd_sql, t.RootID, t.ID)
+	upd_sql := `UPDATE task set root_id = ? WHERE id = ?;`
+	_, err = db.ExecContext(ctx, upd_sql, t.RootID, t.ID)
+	if err != nil {
+		return err
+	}
 
 	return nil
 }

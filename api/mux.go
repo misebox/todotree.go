@@ -22,7 +22,7 @@ func NewMux(ctx context.Context, cfg *config.Config) (http.Handler, func(), erro
 	})
 
 	v := validator.New()
-	db, cleanup, err := store.New(ctx, cfg)
+	db, cleanup, err := store.NewDAO(ctx, cfg)
 	if err != nil {
 		return nil, cleanup, err
 	}
